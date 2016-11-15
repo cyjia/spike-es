@@ -2,14 +2,12 @@ apply plugin: 'java'
 
 repositories {
     jcenter()
-    flatDir {
-        dirs 'lib'
-    }
 }
 
 dependencies {
     compile 'org.elasticsearch:elasticsearch:2.4.1'
     compile 'org.slf4j:slf4j-api:1.7.14'
+    runtime fileTree(dir: 'libs', include: '*.jar')
 
     testCompile 'junit:junit:4.12'
 }

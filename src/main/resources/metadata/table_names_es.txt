@@ -1,0 +1,8 @@
+salesOdrKpi
+salesOdrItemBiz
+salesOdrHeaderBiz
+shpmntStatusStage
+deliveryodrkpi
+deliveryodritembiz
+deliveryodrheaderbiz
+handlingunitcsl

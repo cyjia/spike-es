@@ -1,0 +1,12 @@
+{
+  "commands": [
+    {
+      "cancel": {
+        "allow_primary": true,
+        "node": "cyjia01",
+        "shard": 1,
+        "index": "t1handlingunitcsl"
+      }
+    }
+  ]
+}

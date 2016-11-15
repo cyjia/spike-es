@@ -1,0 +1,54 @@
+{
+  "deliveryodrkpi": {
+    "properties": {
+      "isCurrentDayKpi": {
+        "type": "boolean"
+      },
+      "slaId": {
+        "type": "long"
+      },
+      "orderNum": {
+        "type": "string"
+      },
+      "orderItemNum": {
+        "type": "string"
+      },
+      "unitHourOrDay": {
+        "type": "boolean"
+      },
+      "kpiCode": {
+        "type": "string"
+      },
+      "isDailyKpiEnd": {
+        "type": "boolean"
+      },
+      "createdDate": {
+        "type": "date"
+      },
+      "createdBy": {
+        "type": "string"
+      },
+      "kpiColor": {
+        "type": "string"
+      },
+      "actualSpend": {
+        "type": "long"
+      },
+      "modifiedDate": {
+        "type": "long"
+      },
+      "modifiedBy": {
+        "type": "string"
+      },
+      "id": {
+        "type": "long"
+      },
+      "orderCategory": {
+        "type": "long"
+      },
+      "isKpiEnd": {
+        "type": ""
+      }
+    }
+  }
+}
