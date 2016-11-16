@@ -1,4 +1,6 @@
-package ia.jdbc.util;
+package ia.es;
+
+import ia.jdbc.util.DBMetadata;
 
 public class ESMetadata {
 

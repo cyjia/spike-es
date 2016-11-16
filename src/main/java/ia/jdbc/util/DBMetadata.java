@@ -6,6 +6,21 @@ import java.util.function.Function;
 
 public class DBMetadata {
 
+    public static Table buildTable(ResultSetMetaData metaData, String typeName) throws SQLException {
+        Table table = new Table();
+        table.name = typeName;
+        table.columns = new Column[metaData.getColumnCount()];
+        for (int i = 0; i < table.columns.length; i++) {
+            Column c = new Column();
+            c.name = metaData.getColumnName(i + 1);
+            c.dataLength = metaData.getScale(i + 1);
+            c.decimalSize = metaData.getPrecision(i + 1);
+            c.dataType = mapToEsType(metaData.getColumnType(i + 1), c.dataLength, c.decimalSize);
+            table.columns[i] = c;
+        }
+        return table;
+    }
+
     public static class Column {
         public String name;
         public String dataType;
@@ -71,20 +86,24 @@ public class DBMetadata {
             col.name = columns.getString(4);
             col.dataLength = columns.getInt(7);
             col.decimalSize = columns.getInt(9);
-            JDBCType jdbcType = JDBCType.valueOf(columns.getInt(5));
-            if (!dataTypeMapping.containsKey(jdbcType)) {
-                throw new RuntimeException("unkonw jdbctype map for "
-                        + jdbcType.getName() + " " + jdbcType.ordinal()
-                        + "," + col.dataLength + "," + col.decimalSize);
-            }
-            if (jdbcType == JDBCType.NUMERIC && col.decimalSize != 0) {
-                throw new RuntimeException("Numeric can't map to long");
-            }
-            col.dataType = dataTypeMapping.get(jdbcType);
+            col.dataType = mapToEsType(columns.getInt(5), col.dataLength, col.decimalSize);
             columnList.add(col);
         }
 
         return columnList.toArray(new Column[columnList.size()]);
+    }
+
+    private static String mapToEsType(int type, int dataLength, int decimalSize) throws SQLException {
+        JDBCType jdbcType = JDBCType.valueOf(type);
+        if (!dataTypeMapping.containsKey(jdbcType)) {
+            throw new RuntimeException("unkonw jdbctype map for "
+                    + jdbcType.getName() + " " + jdbcType.ordinal()
+                    + "," + dataLength + "," + decimalSize);
+        }
+        if (jdbcType == JDBCType.NUMERIC && decimalSize != 0) {
+            throw new RuntimeException("Numeric can't map to long");
+        }
+        return dataTypeMapping.get(jdbcType);
     }
 
     private static Map<JDBCType, String> dataTypeMapping = new HashMap<>();

@@ -1,7 +1,7 @@
 package ia.jdbc.util;
 
 import java.sql.*;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class DB {
     private String connectionUrl;
@@ -14,10 +14,10 @@ public class DB {
         password = System.getenv("password");
     }
 
-    public void withConnection(Consumer<Connection> consumer) throws Exception {
+    public <T> T withConnection(Function<Connection, T> function) throws Exception {
         Connection connection = getConnection();
         try {
-            consumer.accept(connection);
+            return function.apply(connection);
         } finally {
             connection.close();
         }
@@ -27,16 +27,16 @@ public class DB {
         return DriverManager.getConnection(connectionUrl, userName, password);
     }
 
-    public void query(String sql, Consumer<ResultSet> tConsumer) {
+    public <T> T query(String sql, Function<ResultSet, T> function) {
         try {
-            withConnection(conn -> {
+            return withConnection(conn -> {
                 Statement statement = null;
                 try {
                     statement = conn.createStatement();
                     ResultSet rs = statement.executeQuery(sql);
-                    tConsumer.accept(rs);
+                    return function.apply(rs);
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 } finally {
                     if (statement != null) {
                         try {
@@ -48,7 +48,7 @@ public class DB {
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }
