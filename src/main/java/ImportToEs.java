@@ -1,5 +1,6 @@
 import ia.es.ESMetadata;
 import ia.es.EsClient;
+import ia.io.util.IOUtil;
 import ia.jdbc.util.DB;
 import ia.jdbc.util.DBMetadata;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
@@ -19,98 +20,8 @@ public class ImportToEs {
             throw new RuntimeException("No tableName provided");
         }
         final String tableName = "doview";
-        final String sql = "select\n" +
-                "    hu.huId as id,\n" +
-                "    hu.huId as huId,\n" +
-                "    hu.sscc as sscc,\n" +
-                "    hu.dlvryNum as deliveryNum,\n" +
-                "    hu.dlvryItemNum as deliveryItemNum,\n" +
-                "    hu.netWeight as netWeight,\n" +
-                "    hu.weightUnit as weightUnit,\n" +
-                "    hu.totalWeight as totalWeight,\n" +
-                "    hu.weightUnitTare as weightUnitTare,\n" +
-                "    hu.length as length,\n" +
-                "    hu.width as width,\n" +
-                "    hu.height as height,\n" +
-                "    hu.unitOfDimension as unitOfDimension,\n" +
-                "    hu.totalVolume as totalVolume,\n" +
-                "    hu.volumeUnit as volumeUnit,\n" +
-                "    hu.tareVolume as tareVolume,\n" +
-                "    hu.volumeUnitTare as volumeUnitTare,\n" +
-                "    hu.packedQty as packedQuantity,\n" +
-                "    hu.materialNumber as materialNumber,\n" +
-                "    hu.idocNum as huIdocNum,\n" +
-                "    hu.idocCreatedDate as huIdocCreatedDate,\n" +
-                "    hu.lastUpdateDate as huLastUpdateDate,\n" +
-                "    hu.calcFlag as huCalcFlag,\n" +
-                "    hu.operFlag as huOperFlag,\n" +
-                "    hu.prdType as productType,\n" +
-                "    doh.dlvryItemQty as deliveryItemQuantity,\n" +
-                "doh.sosDlvryNum as soDeliveryNum,\n" +
-                "doh.sosOrderNum as soOrderNum,\n" +
-                "doh.prtlShip as prtlShip,\n" +
-                "doh.carrCode as carrierCode,\n" +
-                "doh.carrName as carrierName,\n" +
-                "doh.actlGoodsIssueDate as actualGoodsIssueDate,\n" +
-                "doh.carrPhnDesc1 as carrierPhoneDesc1,\n" +
-                "doh.carrPhnDesc2 as carrierPhoneDesc2,\n" +
-                "doh.carrPhnNum1 as carrierPhoneNum1,\n" +
-                "doh.carrPhnNum2 as carrierPhoneNum2,\n" +
-                "doh.carrPickupDate as carrierPickupDate,\n" +
-                "doh.slsOrderNum as soOrderNum,\n" +
-                "doh.modeOfTrspn as modeOfTransport,\n" +
-                "doh.rte as rte,\n" +
-                "doh.shipToCtryCd as shipToCountryCode,\n" +
-                "doh.shipToCtryNm as shipToCountryName,\n" +
-                "doh.ctOrderEntToShipDateBsns as ctOrderEntToShipDateBsns,\n" +
-                "doh.ctOrderEntToShipDateCal as ctOrderEntToShipDateCal,\n" +
-                "doh.ctOrderRcptToShipDateBsns as ctOrderRcptToShipDateBsns,\n" +
-                "doh.ctOrderRcptToShipDateCal as ctOrderRcptToShipDateCal,\n" +
-                "doh.transtTm as transtTm,\n" +
-                "doh.shpngCode as shippingCode,\n" +
-                "doh.shpngSrc as shippingSource,\n" +
-                "doh.createdDate as dohCreatedDate,\n" +
-                "doh.modifiedDate as dohModifiedDate,\n" +
-                "doh.msgType as dohMessageType,\n" +
-                "doh.estArrDate as estimatedArriveDate,\n" +
-                "doh.idocNum as dohIdocNum,\n" +
-                "doh.idocCreatedDate as dohIdocCreatedDate,\n" +
-                "doh.lastUpdateDate as dohLastUpdateDate,\n" +
-                "doh.deptDate as departureDate,\n" +
-                "doh.podEntryDate as podEntryDate,\n" +
-                "doh.cdd as dohCdd,\n" +
-                "doh.podDate as podDate,\n" +
-                "doh.orderMilestone as orderMilestone,\n" +
-                "doh.orderMilestoneName as orderMilestoneName,\n" +
-                "doh.subMilestone as subMilestone,\n" +
-                "doh.subMilestoneName as subMilestoneName,\n" +
-                "doh.dk01Color as dk01Color,\n" +
-                "doh.dk02Color as dk02Color,\n" +
-                "doh.dk03Color as dk03Color,\n" +
-                "doh.dk04Color as dk04Color,\n" +
-                "doh.dk05Color as dk05Color,\n" +
-                "doh.allStatusDttm as allStatusTime,\n" +
-                "doh.allStatusReason as allStatusReason,\n" +
-                "doh.handOverDate as handOverDate,\n" +
-                "doh.packDate as packDate,\n" +
-                "doh.pickDate as pickDate,\n" +
-                "doh.bol as billOfLading,\n" +
-                "doh.carrPickUpTm as carrierPickUpTime,\n" +
-                "doh.netWeight as dohNetWeight,\n" +
-                "doh.totalWeight as dohTotalWeight,\n" +
-                "doh.volumeWeight as dohVolumeWeight,\n" +
-                "doi.prodId as productId,\n" +
-                "doi.dlvrdQty as deliveredQuantity,\n" +
-                "doi.slsOrderLineNum as salesOrderLineNum,\n" +
-                "doi.createdDate as doiCreatedDate,\n" +
-                "doi.modifiedDate as doiModifiedDate,\n" +
-                "doi.idocNum as doiIdocNum,\n" +
-                "doi.idocCreatedDate as doiIdocCreatedDate,\n" +
-                "doi.lastUpdateDate as doiLastUpdateDate,\n" +
-                "doi.convertFlag as doiConvertFlag\n" +
-                "from handlingunitcsl hu\n" +
-                "    LEFT JOIN deliveryOdrHeaderBiz doh on (hu.dlvryNum = doh.dlvryNum)\n" +
-                "LEFT JOIN deliveryOdrItemBiz doi on (hu.dlvryNum = doi.dlvryNum and hu.dlvryItemNum = doi.dlvryItemNum)";
+        final String sql = IOUtil.inputStreamToText(ClassLoader.getSystemResourceAsStream("metadata/do_view.sql"));
+
         final DB db = new DB();
         long pageNum = 0;
         long pageSize = 50000;
@@ -136,7 +47,9 @@ public class ImportToEs {
                 if (!esClient.isIndexExist(index)) {
                     CreateIndexResponse response = esClient.createIndex(index, table.name, mapping);
                 }
-                return resultSetToESIndex(table, esClient, index, rs);
+                long processedCount = resultSetToESIndex(table, esClient, index, rs);
+                esClient.close();
+                return processedCount;
             } catch (SQLException e) {
                 throw new RuntimeException("Error get metadata from result");
             } catch (Exception e) {

@@ -90,4 +90,4 @@ doi.lastUpdateDate as doiLastUpdateDate,
 doi.convertFlag as doiConvertFlag
 from handlingunitcsl hu
     LEFT JOIN deliveryOdrHeaderBiz doh on (hu.dlvryNum = doh.dlvryNum)
-LEFT JOIN deliveryOdrItemBiz doi on (hu.dlvryNum = doi.dlvryNum and hu.dlvryItemNum = doi.dlvryItemNum);
+LEFT JOIN deliveryOdrItemBiz doi on (hu.dlvryNum = doi.dlvryNum and hu.dlvryItemNum = doi.dlvryItemNum)
