@@ -11,7 +11,7 @@ public class ImportSchema {
         String userName = System.getenv("user");
         String password = System.getenv("password");
 
-        DBMetadata.Table[] tables = DBMetadata.getTables(connectionUrl, userName, password,
+        DBMetadata.Table[] tables = DBMetadata.getTables(
                 (tableName) -> !tableName.startsWith("T_") && !tableName.startsWith("t_"));
         for (DBMetadata.Table t : tables) {
             File f = new File(String.format("/Users/CYJIA/scct-tables/%s.csv", t.name));

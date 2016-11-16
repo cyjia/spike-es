@@ -17,6 +17,7 @@ public class DBMetadata {
         public String toString() {
             return "Column{" +
                     "name='" + name + '\'' +
+
                     ", dataType=" + dataType +
                     ", dataLength=" + dataLength +
                     ", decimalSize=" + decimalSize +
@@ -38,7 +39,10 @@ public class DBMetadata {
         }
     }
 
-    public static Table[] getTables(String url, String user, String password, Function<String, Boolean> filter) throws Exception {
+    public static Table[] getTables(Function<String, Boolean> filter) throws Exception {
+        String url = System.getenv("url");
+        String user = System.getenv("user");
+        String password = System.getenv("password");
         Connection con = DriverManager.getConnection(url, user, password);
         DatabaseMetaData metaData = con.getMetaData();
         List<Table> tableList = new ArrayList<>();
