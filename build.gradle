@@ -1,12 +1,16 @@
 apply plugin: 'java'
 
 repositories {
+    mavenLocal()
+    maven { url 'http://10.38.34.20:8081/nexus/content/groups/public/' }
     jcenter()
 }
 
 dependencies {
     compile 'org.elasticsearch:elasticsearch:2.4.1'
     compile 'org.slf4j:slf4j-api:1.7.14'
+    compile 'org.apache.poi:poi:3.14'
+
     runtime fileTree(dir: 'libs', include: '*.jar')
 
     testCompile 'junit:junit:4.12'

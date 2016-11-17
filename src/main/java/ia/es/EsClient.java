@@ -5,6 +5,7 @@ import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsReques
 import org.elasticsearch.action.bulk.*;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
@@ -12,12 +13,20 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.sort.SortOrder;
 
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
+
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 public class EsClient {
     private final TransportClient client;
@@ -28,7 +37,7 @@ public class EsClient {
                 .put("client.transport.sniff", true)
                 .build();
         this.client = TransportClient.builder().settings(settings).build()
-                .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("10.116.61.63"), 9300));
+                .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
     }
 
     public CreateIndexResponse createIndex(String index, String type, String mapping) throws Exception {
@@ -52,6 +61,35 @@ public class EsClient {
 
     public GetResponse getDocument(String index, String type, String id) {
         return client.prepareGet(index, type, id).get();
+    }
+
+    public void searchScroll(String index, int maxDoc, BiConsumer<Integer, SearchHit> hitConsumer) {
+        QueryBuilder qb = boolQuery().must(rangeQuery("podDate").from("2016-05-13T07:50:00.000Z"));
+        SearchResponse response = client.prepareSearch(index)
+                .addSort("podDate", SortOrder.ASC)
+                .setScroll(new TimeValue(60000))
+                .setQuery(qb)
+                .setSize(500).execute().actionGet();
+        long max = maxDoc;
+        int count = 0;
+        while (response.getHits().getHits().length > 0) {
+            System.out.println("took:" + response.getTook());
+            System.out.println("total:" + response.getHits().getTotalHits());
+            for (SearchHit hit : response.getHits().getHits()) {
+                hitConsumer.accept(count, hit);
+                count++;
+            }
+            if (count > max) {
+                break;
+            }
+            response = client.prepareSearchScroll(response.getScrollId())
+                    .setScroll(new TimeValue(60000))
+                    .execute().actionGet();
+        }
+        client.prepareClearScroll()
+                .addScrollId(response.getScrollId())
+                .execute()
+                .actionGet();
     }
 
     public void close() {
