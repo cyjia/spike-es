@@ -6,6 +6,7 @@ import org.elasticsearch.action.bulk.*;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
@@ -14,6 +15,7 @@ import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
 
@@ -22,11 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 public class EsClient {
     private final TransportClient client;
@@ -64,11 +66,13 @@ public class EsClient {
     }
 
     public void searchScroll(String index, int maxDoc, BiConsumer<Integer, SearchHit> hitConsumer) {
-        QueryBuilder qb = boolQuery().must(rangeQuery("podDate").from("2016-05-13T07:50:00.000Z"));
+        TermQueryBuilder productType = termQuery("productType", "9999");
+//        QueryBuilder qb = boolQuery()
+//                .must(rangeQuery("podDate").from("2016-05-13T07:50:00.000Z"));
         SearchResponse response = client.prepareSearch(index)
                 .addSort("podDate", SortOrder.ASC)
                 .setScroll(new TimeValue(60000))
-                .setQuery(qb)
+                .setQuery(productType)
                 .setSize(500).execute().actionGet();
         long max = maxDoc;
         int count = 0;
@@ -97,12 +101,16 @@ public class EsClient {
     }
 
     public BulkResponse bulkIndexDocuments(String index, String mapping, List<Map<String, Object>> bulkList) {
-        BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+        BulkRequestBuilder bulkRequestBuilder = getBulkRequestBuilder();
         bulkList.forEach(x -> {
             bulkRequestBuilder.add(
                     client.prepareIndex(index, mapping, x.get("id").toString()).setSource(x));
         });
         return bulkRequestBuilder.get();
+    }
+
+    public BulkRequestBuilder getBulkRequestBuilder() {
+        return client.prepareBulk();
     }
 
     public void bulkProcess(String index, String mapping, Stream<Map<String, Object>> docStream) throws Exception {
@@ -111,6 +119,10 @@ public class EsClient {
             bulkProcessor.add(client.prepareIndex(index, mapping, x.get("id").toString()).setSource(x).request());
         });
         bulkProcessor.awaitClose(10, TimeUnit.MINUTES);
+    }
+
+    public UpdateRequestBuilder updateRequestBuilder(String index, String type, String id) {
+        return client.prepareUpdate(index, type, id);
     }
 
     private BulkProcessor createBulkProcessor() {
